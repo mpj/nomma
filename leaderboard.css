@@ -20,12 +20,14 @@ body {
 
 .player {
     padding: 5px;
+    cursor: pointer;
 }
 
 .player .name {
     display: inline-block;
     width: 300px;
     font-size: 1.75em;
+
 }
 
 .player .score {
