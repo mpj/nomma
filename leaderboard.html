@@ -1,0 +1,34 @@
+<head>
+  <title>Nomma?</title>
+</head>
+
+<body>
+  <div id="outer">
+    {{> leaderboard}}
+  </div>
+
+
+</body>
+
+<template name="leaderboard">
+  <div class="leaderboard">
+    {{#each players}}
+      {{> player}}
+    {{/each}}
+  </div>
+
+  <span class="wrapper">
+    <input type="text" class="newPlayer" value="Where do you want to eat?" /><br />
+    <input type="button" class="clear" value="Clear votes" />
+  </span>
+
+  
+</template>
+
+<template name="player">
+  <div class="player {{selected}}">
+    <span class="name">{{name}}</span>
+    <span class="score">{{score}}</span>
+  </div>
+</template>
+
