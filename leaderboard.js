@@ -37,8 +37,8 @@ if (Meteor.is_client) {
 
   Template.leaderboard.votesLeft = function () {
     var user = Users.findOne(Session.get('userID')); 
-    if (!user) return 0;
-    return 3-user.votes;
+    if (!user) return MAX_VOTES;
+    return MAX_VOTES-user.votes;
   };
 
   Template.leaderboard.events = {
