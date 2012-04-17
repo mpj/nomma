@@ -35,6 +35,12 @@ if (Meteor.is_client) {
     return Players.find({}, {sort: {score: -1, name: 1}});
   };
 
+  Template.leaderboard.votesLeft = function () {
+    var user = Users.findOne(Session.get('userID')); 
+    if (!user) return 0;
+    return 3-user.votes;
+  };
+
   Template.leaderboard.events = {
     'click .clear': function() {
       if (confirm("Are you sure?"))
@@ -71,21 +77,22 @@ if (Meteor.is_client) {
         return;
       }
 
-      console.log("gc1", getCookie('userID'))
       if (!getCookie('userID'))
         setCookie('userID', Users.insert({ votes: 1}));
-      console.log("gc2", getCookie('userID'))
-      var user = Users.findOne(getCookie('userID'));
+
+      Session.set('userID', getCookie('userID'))
+      var user = Users.findOne(Session.get('userID'));
+
+      var id = this._id;
 
       if (user.votes >= MAX_VOTES)
         return alert("You've already voted " + MAX_VOTES + " times today!");
 
-      Users.update(getCookie('userID'), {$inc: {votes: 1}});
-     
-      var id = this._id;
       $(e.target).parent().effect("highlight", {}, 250, function() {
+        Users.update(getCookie('userID'), {$inc: {votes: 1}});
         Players.update(id, {$inc: {score: 1}});
       });
+
     }
   };
 }
