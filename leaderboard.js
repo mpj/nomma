@@ -27,8 +27,9 @@ function getCookie(c_name)
 var MAX_VOTES = 3;
 var ENTER_KEY_CODE = 13;
 
-Players = new Meteor.Collection("players");
-Users = new Meteor.Collection("users");
+var Players = new Meteor.Collection("players"),
+    Users = new Meteor.Collection("users"),
+    Votes = new Meteor.Collection("votes");
 
 if (Meteor.is_client) {
   Template.leaderboard.players = function () {
@@ -36,16 +37,17 @@ if (Meteor.is_client) {
   };
 
   Template.leaderboard.votesLeft = function () {
-    var user = Users.findOne(Session.get('userID')); 
-    if (!user) return MAX_VOTES;
-    return MAX_VOTES-user.votes;
+    var numVotes = Votes.find({userID: Session.get('userID')}).count(); 
+    return MAX_VOTES-numVotes;
   };
 
   Template.leaderboard.events = {
+  
     'click .clear': function() {
       if (confirm("Are you sure?"))
         Players.update({}, {$set: {score:0}}, {multi: true})
-        Users.update({}, {$set: {votes:0}}, {multi: true})
+        Users.update({}, {multi: true})
+        Votes.remove({}, {multi: true});
     },
     'focus .newPlayer': function (e) {
       $(e.target).val("");
@@ -72,26 +74,38 @@ if (Meteor.is_client) {
 
     'click': function (e) {
 
-      if (e.altKey) {
-        Players.remove(this._id);
-        return;
-      }
-
       if (!getCookie('userID'))
         setCookie('userID', Users.insert({ votes: 1}));
 
       Session.set('userID', getCookie('userID'))
       var user = Users.findOne(Session.get('userID'));
 
-      var id = this._id;
+      var playerID = this._id;
+      var userID = user._id;
 
-      if (user.votes >= MAX_VOTES)
-        return alert("You've already voted " + MAX_VOTES + " times today!");
+      if (e.altKey) {
+        Players.remove(playerID);
+        return;
+      }
 
-      $(e.target).parent().effect("highlight", {}, 250, function() {
-        Users.update(getCookie('userID'), {$inc: {votes: 1}});
-        Players.update(id, {$inc: {score: 1}});
-      });
+      var votes = Votes.find({ userID: userID, playerID: playerID }).fetch();
+
+      if (e.shiftKey) {
+        if (votes) {
+          Votes.remove(votes[0]._id);
+          Players.update(playerID, {$inc: {score: -1}});
+        }
+      } else {
+
+        if (votes.length >= MAX_VOTES)
+          return alert("You've already voted " + MAX_VOTES + " times today!");
+
+        $(e.target).parent().effect("highlight", {}, 250, function() {
+          Votes.insert({ userID: userID, playerID: playerID })
+          Players.update(playerID, {$inc: {score: 1}});
+        });
+
+      }
 
     }
   };
